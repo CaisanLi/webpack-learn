@@ -1,0 +1,21 @@
+{
+  "name": "demo-01",
+  "version": "1.0.0",
+  "description": "webpack技术分享",
+  "private": true,
+  "author": "caigx",
+  "license": "MIT",
+  "scripts": {
+    "build": "./node_modules/.bin/webpack --config webpack.config.js"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^10.2.4",
+    "css-loader": "^6.6.0",
+    "style-loader": "^3.3.1",
+    "webpack": "^5.69.1",
+    "webpack-cli": "^4.9.2"
+  }
+}

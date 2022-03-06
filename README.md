@@ -6,6 +6,13 @@
 >
 > 希望学完后，想想你能用webpack做点不一样的，而不是仅文档中的内容
 
+**目录介绍**
+
+* demo-01：简单的demo，主要使用一些核心配置
+* demo-vue：搭建一个vue项目
+* node-server：一个静态服务，用于部署打包后的文件
+* images：文档需要的图片
+
 ##### 运行逻辑
 
 > 待完善
@@ -251,7 +258,367 @@ yarn run build
 |-- package.json
 ```
 
-**2. 支持vue**
+**2. 基础配置**
+
+设置`entry`、`output`、`mode`：
+
+```js
+module.exports = {
+  mode: 'production', // 设置为生产环境
+  entry: './src/main.js', // 设置入口文件
+  output: {
+    publicPath: '/', // 静态资源前缀地址
+    filename: '[name].[contenthash].bundle.js',
+    clean: true // 清空打包目录，这里默认是dist目录
+  },
+}
+```
+
+`filename`里面的的`[name]、[contenthash]`是`webpack`内部的[替换模板字符串](https://webpack.docschina.org/configuration/output/#template-strings)。
+
+* `[name]`：文件名
+* `[contenthash]`：此 chunk 的 hash 值，只包括该内容类型的元素
+
+编辑`public/index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vue</title>
+</head>
+<body>
+   <!- 设置vue节点 ->
+  <div id="app"></div>
+</body>
+</html>
+```
+
+将`public/index.html`打包到打包目录，安装`html-webpack-plugin`，[相关配置文档](https://github.com/jantimon/html-webpack-plugin#options)，该插件可以简化HTML文件的创建，以及将打包后的`css`、`javascript`自动引入到`index.html`文件中。
+
+```shell
+yarn add html-webpack-plugin -D
+```
+
+配置`webpack.prod.js`:
+
+```js
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+module.exports = {
+  plugins: [
+    new HtmlWebpackPlugin({
+      inject: 'body', // 将打包的js文件放入body最后，默认是放在head
+      template: './public/index.html' // 配置index.html的模板
+    })
+  ]
+}
+```
+
+将`public`目录下的所有文件拷贝到打包目录，作为静态文件使用，安装`copy-webpack-plugin`，[相关配置文档](https://github.com/webpack-contrib/copy-webpack-plugin#options)。
+
+```shell
+yarn add copy-webpack-plugin -D
+```
+
+配置`webpack.prod.js`，注意这里拷贝文件和上面的`html-webpack-plugin`冲突，它们都会同时操作`index.html`，所以拷贝的时候排除了`index.html`。
+
+```js
+const CopyPlugin = require('copy-webpack-plugin')
+module.exports = {
+  plugins: [
+    new CopyPlugin({
+      patterns: [{
+        from: './public',
+        to: './',
+        filter: async (resourcePath) => { // 这里排除index.html 不然会和HtmlWebpackPlugin插件冲突
+          if (resourcePath.endsWith('index.html')) {
+            return false;
+          }
+          return true;
+        },
+      }]
+    })
+  ]
+}
+```
+
+**3. 支持vue**
+
+安装以下依赖
+
+* `vue-loader`：用于编译`.vue`文件
+* `vue-template-compiler`：编译对应的`vue`版本
+* `vue-style-loader`：将`css`动态加入到`head`标签中，`development`环境使用
+* `mini-css-extract-plugin`：将`css`提取到单独的文件，`production`环境使用
+
+```shell
+yarn add vue-loader vue-template-compiler vue-style-loader mini-css-extract-plugin -D
+```
+
+配置`webpack.prod.js`
+
+```js
+const { VueLoaderPlugin } = require('vue-loader')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+module.exports = {
+  module: {
+    rules: [{
+      test: /.vue$/,
+      use: ['vue-loader']
+    }, {
+      test: /\.css$/,
+      use: [MiniCssExtractPlugin.loader, 'css-loader']
+    }]
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: '[name].css'
+    }),
+    new VueLoaderPlugin()
+  ]
+}
+```
+
+**3. 初始化vue项目**
+
+添加`/src/views/index.vue`:
+
+```html
+<template>
+  <div class="app">
+    APP
+  </div>
+</template>
+
+<script>
+  export default {
+		
+  }
+</script>
+
+<style></style>
+```
+
+编辑`/src/main.js`：
+
+```js
+import { createApp } from 'vue';
+import App from './views/index.vue';
+
+createApp(App).mount('#app')
+```
+
+这样一个简单的`vue`项目就搭建起来了
+
+
+
+**3. CSS预处理器**
+
+这里仅添加对`less`的支持，安装`less`、`less-loader`
+
+```shell
+yarn add less less-loader -D
+```
+
+配置`wepback.prod.js`
+
+```js
+module.exports = {
+  module: {
+    rules: [{
+      test: /\.(le|c)ss$/,
+      use: [MiniCssExtractPlugin.loader, 'css-loader', 'less-loader']
+    }]
+  }
+}
+```
+
+添加`/src/assets/css/global.less`，并设置：
+
+```less
+body, html {
+  height: 100%;
+  background-color: #e6e6e6;
+}
+```
+
+修改`/src/main.js`，增加对`global.less`的引入：
+
+```js
+import './assets/css/global.less'
+```
+
+修改`/src/views/index.vue`里的`style`标签：
+
+```html
+<style scoped lang="less">
+  .app {
+    color: red;
+  }
+</style>
+```
+
+
+
+**4. 图像、字体文件**
+
+在`webpack5`之前处理资源（字体、图片、图标等）文件，通常使用：
+
+* `raw-loader`：将文件导入为字符串
+* `url-loader`：将文件作为data URL（默认为base64，也可以自定义）内联导bundle中
+* `file-loader`：将文件发送到输出目录，并返回`文件地址`
+
+而现在`webpack`已内置处理[资源模块类型](https://webpack.docschina.org/guides/asset-modules/)，来替换上面的loader：
+
+* `asset/resource`：和`file-loader`相似
+* `asset/inline`：和`url-loader`相似
+* `asset/source`：和`raw-loader`相似
+* `asset`：在导出一个 data URI 和发送一个单独的文件之间自动选择。之前通过使用 `url-loader`，并且配置资源体积限制实现。
+
+配置`webpack.prod.js`：
+
+```js
+module.exports = {
+  module: {
+    rules: [{ // 处理图片
+      test: /\.(png|jpg|jpeg|svg|gif)$/i,
+      type: 'asset', 
+      generator: {
+        filename: 'images/[name][ext][query]'
+      },
+      parser: {
+      	dataUrlCondition: {
+          maxSize: 1024 // 1kb 小于1kb的文件用`inline`模式，反之用`resource`模式
+        }
+    	}
+    }, { // 处理字体
+      test: /\.(ttf|otf|woff|eot|woff2)$/i,
+      type: 'asset/resource',
+      generator: {
+        filename: 'fonts/[name][ext][query]'
+      },
+    }]
+  }
+}
+```
+
+添加`/src/assets/fonts`，并添加`iconfont`相关文件
+
+修改`/src/assets/css/global.less`，增加对`iconfont.css`引用：
+
+```less
+@import url('../fonts/iconfont.css');
+```
+
+添加`/src/assets/images`，并添加一些图片
+
+修改`/src/views/index.vue`，增加对图片的引用
+
+```html
+<template>
+  <div class="app">
+    APP
+    <img :src="require('../assets/images/test.jpg')" >
+  </div>
+</template>
+```
+
+
+
+**5. Babel**
+
+>  [如何兼容IE](https://www.yuque.com/kuitos/gky7yw/qskte2)，当前未做IE兼容
+
+安装`@babel/core`、`@babel/preset-env`、`babel-loader`
+
+```js
+yarn add babel-loader @babel/core @babel/preset-env
+```
+
+安装`core-js`，截止当前写文档时的版本为`3.21.1`
+
+```js
+yarn add core-js
+```
+
+配置`webpack.prod.js`
+
+```js
+module.exports = {
+  module: {
+    rules: [{
+      test: /\.js$/,
+      include: /\/src/, // 只编译符合规则的模块
+      use: ['babel-loader']
+    }]
+  }
+}
+```
+
+在根目录添加`.babelrc.js`文件，设置`babel`配置，并配置：
+
+```js
+module.exports = {
+	presets: [
+		[
+			'@babel/preset-env',
+			{
+				useBuiltIns: 'entry',
+				corejs: '3.21.1', // 截止当前写文档时的版本
+			},
+		],
+	],
+	plugins: [],
+};
+```
+
+在根目录添加`.browserslistrc`文件，设置打包工具的目标浏览器，[相关配置文档](https://github.com/browserslist/browserslist#full-list)，并配置：
+
+```js
+defaults
+```
+
+**6. resolve（解析）**
+
+设置`路径`别名（`alias`），简化引入路径写法
+
+配置`webpack.prod.js`：
+
+```js
+const path = require('path')
+const resolve = (_path) => {
+  return path.resolve(__dirname, _path);
+}
+
+module.exports = {
+  resolve: {
+    alias: {
+      '@': resolve('../src'),
+      '@views': resolve('../src/views'),
+      '@assets': resolve('../src/assets')
+    }
+  }
+}
+```
+
+更改`/src/main.js`：
+
+```js
+- import App from './views/index.vue';
+- import './assets/css/global.less';
++ import App from '@views/index.vue';
++ import '@assets/css/global.less';
+```
+
+更改`/src/views/index.vue`:
+
+```html
+- <img :src="require('../assets/images/test.jpg')" >
++ <img :src="require('@assets/images/test.jpg')" >
+```
 
 
 

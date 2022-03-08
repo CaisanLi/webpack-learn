@@ -2,7 +2,8 @@ const { VueLoaderPlugin } = require('vue-loader');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const path = require('path')
+const path = require('path');
+const webpack = require('webpack');
 
 const resolve = (_path) => {
   return path.resolve(__dirname, _path);
@@ -21,7 +22,8 @@ module.exports = {
       '@': resolve('../src'),
       '@views': resolve('../src/views'),
       '@assets': resolve('../src/assets')
-    }
+    },
+    extensions: ['.vue', '...'], // '...'表示默认扩展 ['.js', '.json', '.wasm']
   },
 	optimization: {
 		splitChunks: {
@@ -80,6 +82,10 @@ module.exports = {
 		],
 	},
 	plugins: [
+    new webpack.DefinePlugin({
+      // 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+      'PRODUCTION': JSON.stringify(true)
+    }),
 		new MiniCssExtractPlugin({
 			filename: '[name].css',
 		}),

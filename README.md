@@ -581,7 +581,7 @@ module.exports = {
 defaults
 ```
 
-**6. resolve（解析）**
+**6. resolve - alias（解析 - 别名）**
 
 设置`路径`别名（`alias`），简化引入路径写法
 
@@ -621,4 +621,57 @@ module.exports = {
 ```
 
 
+
+**7. resolve - extensions**
+
+设置`extensions`，简化引用文件扩展名
+
+配置`webpack.prod.js`:
+
+```js
+module.exports = {
+  resolve: {
+    extensions: ['.vue', '...'], // '...'表示默认扩展 ['.js', '.json', '.wasm']
+  }
+}
+```
+
+更改`/src/main.js`:
+
+```js
+- import App from '@views/index.vue';
++ import App from '@views/index';
+```
+
+
+
+**8. 配置环境变量**
+
+使用`webpack`内置模块`DefinePlugin`来定义不同环境的`环境变量`
+
+配置`webpack.prod.js`:
+
+```js
+module.exports = {
+  plugins: [
+    new webpack.DefinePlugin({
+      'PRODUCTION': JSON.stringify(true)
+    })
+  ]
+}
+```
+
+更改`/src/main.js`:
+
+```js
+if (PRODUCTION) {
+  console.log('当前是生产环境')
+} else {
+  console.log('当前不是生产环境')
+}
+```
+
+**9. devtool**
+
+[配置说明](https://webpack.docschina.org/configuration/devtool/)
 

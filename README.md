@@ -675,3 +675,27 @@ if (PRODUCTION) {
 
 [配置说明](https://webpack.docschina.org/configuration/devtool/)
 
+该配置项控制是否生成以及如何生成`SourceMap`，`SourceMap`是一种映射关系，当项目运行后，如果出现错误，我们可以利用`SourceMap`反向定位到源码位置。
+
+但是不同的`devtool`的值会影响`构建`和`重构建`的速度。
+
+代码请见`demo-source-map`。
+
+直接总结：
+
+| Devtool                      | Build | rebuild       | 显示代码 | SourceMap     | 描述         |
+| ---------------------------- | ----- | ------------- | -------- | ------------- | ------------ |
+| (none)                       | 很快  | 很快          | 无       | 无            | 无法定位错误 |
+| eval                         | 块    | 很快（cache） | 编译后   | 无            | 定位到文件   |
+| source-map                   | 很慢  | 很慢          | 源代码   | 有            | 定位到行列   |
+| eval-source-map              | 很慢  | 一般（cache） | 编译后   | 有（dataUrl） | 定位到行列   |
+| eval-cheap-source-map        | 一般  | 快（cache）   | 编译后   | 有（dataUrl） | 定位到行     |
+| eval-cheap-module-source-map | 慢    | 快（cache）   | 源代码   | 有（dataUrl） | 定位到行     |
+| inline-source-map            | 很慢  | 很慢          | 源代码   | 有（dataUrl） | 定位到行列   |
+| hidden-source-map            | 很慢  | 很慢          | 源代码   | 有            | 无法定位错误 |
+| nosource-source-map          | 很慢  | 很慢          | 源代码   | 无            | 定位到文件   |
+
+在`开发环境`时建议`source-map`、`eval-source-map`，生产环境建议`(none)
+
+**10. 代码分离**
+

@@ -1,7 +1,6 @@
 const { VueLoaderPlugin } = require('vue-loader');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const webpack = require('webpack');
 
@@ -10,13 +9,24 @@ const resolve = (_path) => {
 }
 
 module.exports = {
-	mode: 'production',
+	mode: 'development',
 	entry: './src/main.js',
 	output: {
 		publicPath: '/',
 		filename: '[name].[contenthash].bundle.js',
 		clean: true,
 	},
+  devServer: {
+    static: './dist',
+    port: 9000,
+    proxy: {
+      '/uaa': {
+        target: 'http://192.168.4.158:32560',
+        pathRewrite: { '^/uaa': '' },
+      }
+    }
+  },
+  // devtool: 'source-map',
   resolve: {
     alias: {
       '@': resolve('../src'),
@@ -25,7 +35,6 @@ module.exports = {
     },
     extensions: ['.vue', '...'], // '...'表示默认扩展 ['.js', '.json', '.wasm']
   },
-  devtool: 'eval',
 	optimization: {
 		splitChunks: {
 			chunks: 'all',
@@ -57,7 +66,7 @@ module.exports = {
 			{
 				// 处理样式文件
 				test: /\.(le|c)ss$/i,
-				use: [MiniCssExtractPlugin.loader, 'css-loader', 'less-loader'],
+				use: ['vue-style-loader', 'css-loader', 'less-loader'],
 			},
 			{
 				// 处理图片
@@ -82,14 +91,11 @@ module.exports = {
 			},
 		],
 	},
-	plugins: [
+	plugins: [ 
     new webpack.DefinePlugin({
       // 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-      'PRODUCTION': JSON.stringify(true)
+      'PRODUCTION': JSON.stringify(false)
     }),
-		new MiniCssExtractPlugin({
-			filename: '[name].css',
-		}),
 		new VueLoaderPlugin(),
 		new HtmlWebpackPlugin({
 			inject: 'body',

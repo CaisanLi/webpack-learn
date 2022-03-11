@@ -695,7 +695,149 @@ if (PRODUCTION) {
 | hidden-source-map            | 很慢  | 很慢          | 源代码   | 有            | 无法定位错误 |
 | nosource-source-map          | 很慢  | 很慢          | 源代码   | 无            | 定位到文件   |
 
-在`开发环境`时建议`source-map`、`eval-source-map`，生产环境建议`(none)
+在`开发环境`时建议`source-map`、`eval-source-map`，生产环境建议`(none)`
 
-**10. 代码分离**
+**10. JS代码分离**
+
+配置`webpack.prod.js`:
+
+```js
+module.exports = {
+  optimization: {
+		splitChunks: {
+			chunks: 'all',
+      cacheGroups: {
+        defaultVendors: {
+          name: 'vendor',
+          test: /[\\/]node_modules[\\/]/,
+          priority: -10
+        },
+        default: {
+          minChunks: 2,
+          priority: -20
+        },
+      },
+		},
+	},
+}
+```
+
+**11. 开发环境配置**
+
+上面的配置都是作为`生产环境`配置的，下面开始做`开发环境`配置
+
+在`/build`目录下复制一份`webpack.prod.js`重命名为`webpack.dev.js`
+
+安装`webpack-dev-server`，[配置文档]([webpack-dev-server API | webpack](https://webpack.js.org/api/webpack-dev-server/))
+
+```shell
+yarn add webpack-dev-server -D
+```
+
+修改`webpack.dev.js`：
+
+```js
+module.exports = {
+  module: {
+    rules: [{
+				// 处理样式文件
+				test: /\.(le|c)ss$/i,
+				- use: [MiniCssExtractPlugin.loader, 'css-loader', 'less-loader'],
+    		+ use: ['vue-style-loader', 'css-loader', 'less-loader'],
+			}]
+  },
+    plugins: [
+			- new MiniCssExtractPlugin({
+			-  filename: '[name].css',
+			-	}), 
+    ],
+  - devtool: 'source-map', // 这个须删除，不然热更新时，vue的状态会丢失
+  devServer: {
+    static: './dist', // 设置将dist目录下的文件部署到服务
+    port: 9000, // 设置启动端口  
+  },  
+}
+```
+
+在`package.json`添加`scripts`
+
+```json
+{
+  "scrips": {
+    "dev": "./node_modules/.bin/webpack serve --config ./build/webpack.dev.js"
+  }
+}
+```
+
+这样一个简单的`开发环境`已经创建好了，接下来增加请求`代理`配置
+
+修改`webpack.dev.js`，这里我们用`用户中心`的`API`做测试
+
+```js
+module.exports = {
+  devServer: {
+    proxy: {
+      '/uaa': {
+        target: 'http://192.168.4.158:32560',
+        pathRewrite: { '^/uaa': '' },
+      }
+    }
+  }
+}
+```
+
+重启服务。
+
+修改`/src/index.vue`：
+
+```html
+<script>
+  export default {
+    methods: {
+      // 获取公共路径
+      getPublicPath() {
+        // 报了 登录超时 就说明正确了
+        fetch('/uaa/backend/sys/api/open/v1/file/publicFilePrefix').then(res => res.json()).then(res => {
+          console.log('res：', res)
+        }).catch(err => {
+          console.log('err：', err)
+        })
+      }
+    },
+    mounted() {
+      this.getPublicPath()
+    }
+  }
+</script>
+```
+
+**11. 性能优化**
+
+**通用环境**
+
+1. 使用最新的`webpack`、`node.js`（当没说）
+
+2. `loader`：使用`include`字段，减少查询文件时间
+
+   ```js
+   const path = require('path');
+   
+   module.exports = {
+     //...
+     module: {
+       rules: [
+         {
+           test: /\.js$/,
+           include: path.resolve(__dirname, 'src'),
+           loader: 'babel-loader',
+         },
+       ],
+     },
+   };
+   
+   ```
+
+   
+
+3. `resolve.extensions`：减少``
 

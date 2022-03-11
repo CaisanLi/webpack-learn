@@ -15,9 +15,24 @@
 
 ##### 运行逻辑
 
-> 待完善
+----
 
 webpack启动后会在entry里配置的module开始递归解析entry所依赖的所有module，每找到一个module, 就会根据配置的loader去找相应的转换规则，对module进行转换后在解析当前module所依赖的module，这些模块会以entry为分组，一个entry和所有相依赖的module也就是一个chunk，最后webpack会把所有chunk转换成文件输出，在整个流程中webpack会在恰当的时机执行plugin的逻辑。
+
+```flow
+st=>start: webpack.config.js
+entry=>operation: entry（入口文件）
+module=>operation: module（js、css、vue模块）
+loader=>operation: loader（loader）
+childModule=>condition: 是否还有子module？
+output=>operation: output（输出）
+e=>end: chunk文件
+st->entry->module->loader->childModule->output->e
+
+childModule(no)->output
+childModule(yes)->module
+
+```
 
 
 

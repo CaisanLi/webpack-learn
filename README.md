@@ -22,8 +22,8 @@ webpack启动后会在entry里配置的module开始递归解析entry所依赖的
 ```flow
 st=>start: webpack.config.js
 entry=>operation: entry（入口文件）
-module=>operation: module（js、css、vue模块）
-loader=>operation: loader（loader）
+module=>operation: module（js、css、image、vue...）
+loader=>operation: loader（css-loader、file-loader、vue-loader...）
 childModule=>condition: 是否还有子module？
 output=>operation: output（输出）
 e=>end: chunk文件
@@ -828,8 +828,6 @@ module.exports = {
 
 **11. 性能优化**
 
-**通用环境**
-
 1. 使用最新的`webpack`、`node.js`（当没说）
 
 2. `loader`：使用`include`字段，减少查询文件时间
@@ -854,5 +852,13 @@ module.exports = {
 
    
 
-3. `resolve.extensions`：减少``
+3. 减少`resolve.extensions`、`resolve.modules`、`resolve.mainFiles`、`resolve.descriptionFiles`中的条目数量，因为他们会增加文件系统调用的次数。
 
+4. 使用`DllPlugin`：[文档地址](https://webpack.docschina.org/plugins/dll-plugin/)
+
+5. work池：`thread-loader`可以将非常消耗资源的 loader 分流给一个 worker pool
+
+3. 持久化缓存：在 webpack 配置中使用 [`cache`](https://webpack.docschina.org/configuration/cache) 选项。使用 `package.json` 中的 `"postinstall"` 清除缓存目录。
+
+7. [webpack-bundle-analyzer](https://github.com/webpack-contrib/webpack-bundle-analyzer)：打包分析工具
+8. 利用`Tree Shaking`特性，[文档地址](https://webpack.docschina.org/guides/tree-shaking/)

@@ -26,8 +26,7 @@ module=>operation: module（js、css、image、vue...）
 loader=>operation: loader（css-loader、file-loader、vue-loader...）
 childModule=>condition: 是否还有子module？
 output=>operation: output（输出）
-e=>end: chunk文件
-st->entry->module->loader->childModule->output->e
+st->entry->module->loader->childModule->output
 
 childModule(no)->output
 childModule(yes)->module
@@ -67,7 +66,7 @@ module.exports = {
 
 **loader**
 
-`webpack`只能处理`javascript`和`json`文件。而`loader`可以让`webpack`去处理其它类型的文件。
+`webpack`只能处理`javascript`和`json`文件，而`loader`可以让`webpack`去处理其它类型的文件。
 
 ```js
 module.exports = {
@@ -86,8 +85,6 @@ module.exports = {
 
 ```js
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const webpack = require('webpack'); // 用于访问内置插件
-
 module.exports = {
 	// ...
   plugins: [new HtmlWebpackPlugin({ template: './src/index.html' })],
@@ -360,7 +357,7 @@ module.exports = {
 }
 ```
 
-**3. 支持vue**
+**3. 支持vue 3.0**
 
 安装以下依赖
 
@@ -801,7 +798,7 @@ module.exports = {
 }
 ```
 
-重启服务。
+启动服务。
 
 修改`/src/index.vue`：
 

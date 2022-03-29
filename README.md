@@ -26,6 +26,7 @@ module=>operation: module（js、css、image、vue...）
 loader=>operation: loader（css-loader、file-loader、vue-loader...）
 childModule=>condition: 是否还有子module？
 output=>operation: output（输出）
+
 st->entry->module->loader->childModule->output
 
 childModule(no)->output
@@ -360,11 +361,15 @@ module.exports = {
 **3. 支持vue 3.0**
 
 安装以下依赖
-
+* `vue`
 * `vue-loader`：用于编译`.vue`文件
 * `vue-template-compiler`：编译对应的`vue`版本
 * `vue-style-loader`：将`css`动态加入到`head`标签中，`development`环境使用
 * `mini-css-extract-plugin`：将`css`提取到单独的文件，`production`环境使用
+
+```shell
+yarn add vue
+```
 
 ```shell
 yarn add vue-loader vue-template-compiler vue-style-loader mini-css-extract-plugin -D
@@ -378,7 +383,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 module.exports = {
   module: {
     rules: [{
-      test: /.vue$/,
+      test: /\.vue$/,
       use: ['vue-loader']
     }, {
       test: /\.css$/,
@@ -824,6 +829,8 @@ module.exports = {
 ```
 
 **11. 性能优化**
+
+找了个[性(yin)能(wei)优(lan)化](https://juejin.cn/post/6996816316875161637)的文章
 
 1. 使用最新的`webpack`、`node.js`（当没说）
 
